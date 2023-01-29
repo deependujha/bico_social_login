@@ -4,6 +4,8 @@ import { ethers } from 'ethers';
 import { ChainId } from '@biconomy/core-types';
 import SocialLogin from '@biconomy/web3-auth';
 import SmartAccount from '@biconomy/smart-account';
+import ABI from '@/constants/ABI';
+import DeployedAddress from '@/constants/DeployedAddress';
 
 const Home = () => {
 	const [provider, setProvider] = useState<any>();
@@ -97,13 +99,44 @@ const Home = () => {
 		}
 	}, [account, provider]);
 
-	const showWallet = () => {
-		console.log('hello wrold');
-		socialLoginSDK?.showWallet();
-		console.log('bye wrold');
-		setTimeout(() => {
-			socialLoginSDK?.hideWallet();
-		}, 2000);
+	const readValueFunction = () => {
+		let contract = new ethers.Contract(DeployedAddress, ABI, provider);
+
+		contract
+			.get()
+			.then((val: any) => {
+				console.log('fetched value is: ', val);
+			})
+			.catch((err: object) =>
+				console.log('Printing error msg at getText function: ', err)
+			);
+	};
+
+	const writeValueFunction = () => {
+		let contract = new ethers.Contract(
+			DeployedAddress,
+			ABI,
+			provider.getSigner()
+		);
+		contract
+			.setGreeting('jai maa lakshmi')
+			.then((tx: any) => {
+				console.log('transaction occured : ', tx.hash);
+				return tx
+					.wait()
+					.then(() => {
+						console.log('text overwritten successfully');
+					})
+					.catch((err: any) =>
+						console.log(
+							'Printing error msg in overwritting text -1: ',
+							err.message
+						)
+					);
+			})
+			.catch((err: any) => {
+				console.log('Printing error msg in transaction hash -2: ', err.message);
+			});
 	};
 
 	return (
@@ -129,7 +162,8 @@ const Home = () => {
 						<p>{scwAddress}</p>
 					</div>
 				)}
-				<button onClick={showWallet}>show wallet</button>
+				<button onClick={readValueFunction}>read value Function</button>
+				<button onClick={writeValueFunction}>write value Function</button>
 			</main>
 		</div>
 	);
